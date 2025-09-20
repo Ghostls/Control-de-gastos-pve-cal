@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #bd0000 0%, #1000a2 100%);
+        }
+        .shadow-strong {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="gradient-bg text-white py-6 px-4 shadow-lg">
+        <div class="container mx-auto">
+            <h1 class="text-3xl font-bold flex items-center">
+                <i data-feather="dollar-sign" class="mr-2"></i> Control de Gastos
+            </h1>
+            <p class="opacity-90 mt-1">Administra tus finanzas diarias fácilmente</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Panel de inicio -->
+            <div class="md:col-span-1 bg-white rounded-xl p-6 shadow-strong" data-aos="fade-right">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-feather="home" class="mr-2 text-purple-600"></i> Inicio del día
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Saldo inicial</label>
+                        <div class="relative flex">
+                            <input type="number" id="initialBalance" placeholder="0.00" 
+                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200 p-2 border">
+                            <select id="initialCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border">
+                                <option value="USD">USD ($)</option>
+                                <option value="VES">VES (Bs)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="setInitialBalance()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
+                        <i data-feather="save" class="mr-2"></i> Guardar
+                    </button>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="font-medium text-gray-800 mb-2">Resumen</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Saldo inicial ($):</span>
+                            <span id="displayInitialBalanceUSD" class="font-medium">$0.00</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Gastos totales ($):</span>
+                            <span id="totalExpensesUSD" class="font-medium text-red-500">$0.00</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-gray-200">
+                            <span class="text-gray-800 font-semibold">Saldo restante ($):</span>
+                            <span id="remainingBalanceUSD" class="font-bold text-green-600">$0.00</span>
+                        </div>
+                        <hr class="my-4 border-gray-200">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Saldo inicial (Bs):</span>
+                            <span id="displayInitialBalanceVES" class="font-medium">Bs 0.00</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Gastos totales (Bs):</span>
+                            <span id="totalExpensesVES" class="font-medium text-red-500">Bs 0.00</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-gray-200">
+                            <span class="text-gray-800 font-semibold">Saldo restante (Bs):</span>
+                            <span id="remainingBalanceVES" class="font-bold text-green-600">Bs 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registro de gastos -->
+            <div class="md:col-span-2 bg-white rounded-xl p-6 shadow-strong" data-aos="fade-left">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i data-feather="shopping-bag" class="mr-2 text-blue-600"></i> Registrar gasto
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Monto</label>
+                        <div class="relative flex">
+                            <input type="number" id="expenseAmount" placeholder="0.00" 
+                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
+                            <select id="expenseCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border">
+                                <option value="USD">USD ($)</option>
+                                <option value="VES">VES (Bs)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <input type="text" id="expenseDescription" placeholder="¿En qué gastaste?" 
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                        <input type="date" id="expenseDate" 
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="addExpense()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
+                            <i data-feather="plus" class="mr-2"></i> Agregar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i data-feather="list" class="mr-2 text-gray-600"></i> Historial de gastos
+                    </h3>
+                    <div class="overflow-auto max-h-96 scrollbar-hide">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesList" class="bg-white divide-y divide-gray-200">
+                                <!-- Aquí se agregarán los gastos dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i data-feather="calendar" class="mr-2 text-gray-600"></i> Meses registrados
+                    </h3>
+                    <div id="registeredMonthsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Aquí se agregarán los botones de meses dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para informe mensual -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold flex items-center">
+                    <i data-feather="pie-chart" class="mr-2 text-green-600"></i> Informe mensual
+                </h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Seleccionar mes</label>
+                <input type="month" id="reportMonth" class="w-full rounded-md border-gray-300 shadow-sm p-2 border">
+            </div>
+            
+            <div id="reportContent" class="space-y-4">
+                <!-- Aquí se mostrará el informe -->
+            </div>
+            
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <button onclick="generateReport()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
+                    <i data-feather="refresh-cw" class="mr-2"></i> Generar informe
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase - ¡AQUÍ ESTÁ TU API!
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcpgJ3zCDKZU3gcoidiJNjgmFuX8XLyzI",
+            authDomain: "ld-no-te-pases.firebaseapp.com",
+            projectId: "ld-no-te-pases",
+            storageBucket: "ld-no-te-pases.firebasestorage.app",
+            messagingSenderId: "1026029485243",
+            appId: "1:1026029485243:web:4528a6853f4ce4a7877d9e",
+            measurementId: "G-BXD87MQB91"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Variables globales
+        let initialBalance = { USD: 0, VES: 0 };
+        let expenses = [];
+        
+        // Inicializar componentes
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+            AOS.init();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('expenseDate').value = today;
+            
+            loadInitialBalanceFromDB();
+            listenForExpenses();
+        });
+
+        // Cargar saldo inicial desde Firestore
+        async function loadInitialBalanceFromDB() {
+            try {
+                const doc = await db.collection('summary').doc('initialBalances').get();
+                if (doc.exists) {
+                    initialBalance = doc.data();
+                    updateBalanceSummary();
+                }
+            } catch (error) {
+                console.error("Error al cargar saldos iniciales:", error);
+                showNotification('Error al cargar datos iniciales', 'error');
+            }
+        }
+        
+        // Establecer saldo inicial
+        async function setInitialBalance() {
+            const balanceInput = document.getElementById('initialBalance');
+            const currencyInput = document.getElementById('initialCurrency');
+            const balance = parseFloat(balanceInput.value) || 0;
+            const currency = currencyInput.value;
+            
+            if (balance < 0) {
+                showNotification('El saldo inicial no puede ser negativo', 'error');
+                return;
+            }
+            
+            initialBalance[currency] = balance;
+            
+            try {
+                await db.collection('summary').doc('initialBalances').set(initialBalance);
+                updateBalanceSummary();
+                balanceInput.value = '';
+                showNotification('Saldo inicial guardado correctamente', 'success');
+            } catch (error) {
+                console.error("Error al guardar el saldo inicial: ", error);
+                showNotification('Error al guardar el saldo inicial', 'error');
+            }
+        }
+
+        // Listener en tiempo real para gastos
+        function listenForExpenses() {
+            db.collection('expenses').orderBy('date', 'desc').onSnapshot(snapshot => {
+                expenses = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                renderExpenses();
+                updateBalanceSummary();
+                renderRegisteredMonths();
+            }, error => {
+                console.error("Error en el listener de gastos: ", error);
+            });
+        }
+
+        // Agregar nuevo gasto
+        async function addExpense() {
+            const amountInput = document.getElementById('expenseAmount');
+            const descriptionInput = document.getElementById('expenseDescription');
+            const dateInput = document.getElementById('expenseDate');
+            const currencyInput = document.getElementById('expenseCurrency');
+            
+            const amount = parseFloat(amountInput.value) || 0;
+            const description = descriptionInput.value.trim();
+            const date = dateInput.value;
+            const currency = currencyInput.value;
+            
+            if (amount <= 0) {
+                showNotification('El monto debe ser mayor a cero', 'error');
+                return;
+            }
+            
+            if (!description || !date) {
+                showNotification('Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            if (initialBalance[currency] <= 0) {
+                 showNotification('Primero debes establecer un saldo inicial para esta moneda', 'error');
+                 return;
+            }
+            
+            const newExpense = {
+                amount,
+                description,
+                date,
+                currency,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            try {
+                await db.collection('expenses').add(newExpense);
+                amountInput.value = '';
+                descriptionInput.value = '';
+                showNotification('Gasto agregado correctamente', 'success');
+            } catch (error) {
+                console.error("Error al agregar gasto: ", error);
+                showNotification('Error al agregar gasto', 'error');
+            }
+        }
+
+        // Renderizar lista de gastos
+        function renderExpenses() {
+            const expensesList = document.getElementById('expensesList');
+            expensesList.innerHTML = '';
+            
+            if (expenses.length === 0) {
+                expensesList.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-4 py-4 text-center text-gray-500">
+                            No hay gastos registrados aún
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            expenses.forEach(expense => {
+                const row = document.createElement('tr');
+                const formattedAmount = expense.currency === 'USD' 
+                    ? `-$${expense.amount.toFixed(2)}` 
+                    : `Bs -${expense.amount.toFixed(2)}`;
+                
+                row.innerHTML = `
+                    <td class="px-4 py-2 whitespace-nowrap">${formatDate(expense.date)}</td>
+                    <td class="px-4 py-2">${expense.description}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-red-500">${formattedAmount}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        <button onclick="deleteExpense('${expense.id}')" class="text-red-500 hover:text-red-700">
+                            <i data-feather="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                expensesList.appendChild(row);
+            });
+            
+            feather.replace();
+        }
+
+        // Eliminar gasto
+        async function deleteExpense(id) {
+            if (confirm('¿Estás seguro de eliminar este gasto?')) {
+                try {
+                    await db.collection('expenses').doc(id).delete();
+                    showNotification('Gasto eliminado correctamente', 'success');
+                } catch (error) {
+                    console.error("Error al eliminar gasto: ", error);
+                    showNotification('Error al eliminar gasto', 'error');
+                }
+            }
+        }
+
+        // Actualizar resumen de saldo
+        function updateBalanceSummary() {
+            const totalExpensesUSD = expenses.filter(e => e.currency === 'USD').reduce((sum, expense) => sum + expense.amount, 0);
+            const totalExpensesVES = expenses.filter(e => e.currency === 'VES').reduce((sum, expense) => sum + expense.amount, 0);
+            
+            const remainingBalanceUSD = initialBalance.USD - totalExpensesUSD;
+            const remainingBalanceVES = initialBalance.VES - totalExpensesVES;
+            
+            document.getElementById('displayInitialBalanceUSD').textContent = `$${initialBalance.USD.toFixed(2)}`;
+            document.getElementById('totalExpensesUSD').textContent = `-$${totalExpensesUSD.toFixed(2)}`;
+            document.getElementById('remainingBalanceUSD').textContent = `$${remainingBalanceUSD.toFixed(2)}`;
+            
+            document.getElementById('displayInitialBalanceVES').textContent = `Bs ${initialBalance.VES.toFixed(2)}`;
+            document.getElementById('totalExpensesVES').textContent = `Bs -${totalExpensesVES.toFixed(2)}`;
+            document.getElementById('remainingBalanceVES').textContent = `Bs ${remainingBalanceVES.toFixed(2)}`;
+
+            const updateBalanceColor = (balanceId, remainingBalance, initial) => {
+                const element = document.getElementById(balanceId);
+                element.classList.remove('text-green-600', 'text-yellow-600');
+                if (remainingBalance < (initial * 0.2)) {
+                    element.classList.add('text-yellow-600');
+                } else {
+                    element.classList.add('text-green-600');
+                }
+            };
+            
+            updateBalanceColor('remainingBalanceUSD', remainingBalanceUSD, initialBalance.USD);
+            updateBalanceColor('remainingBalanceVES', remainingBalanceVES, initialBalance.VES);
+        }
+
+        // Renderiza la lista de meses registrados
+        function renderRegisteredMonths() {
+            const container = document.getElementById('registeredMonthsContainer');
+            container.innerHTML = '';
+            
+            const uniqueMonths = [...new Set(expenses.map(e => e.date.substring(0, 7)))].sort().reverse();
+            
+            if (uniqueMonths.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-500 text-center col-span-full">No hay meses registrados aún.</p>`;
+                return;
+            }
+            
+            uniqueMonths.forEach(month => {
+                const [year, monthNum] = month.split('-');
+                const monthName = new Date(year, monthNum - 1).toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+                
+                const button = document.createElement('button');
+                button.className = 'bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-sm transition fade-in text-center text-sm';
+                button.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                button.onclick = () => showMonthlyReportFor(month);
+                container.appendChild(button);
+            });
+        }
+
+        // Muestra el modal del informe para un mes específico
+        function showMonthlyReportFor(month) {
+            document.getElementById('reportMonth').value = month;
+            document.getElementById('reportModal').classList.remove('hidden');
+            generateReport();
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        // Generar informe mensual
+        function generateReport() {
+            const monthInput = document.getElementById('reportMonth').value;
+            if (!monthInput) return;
+            
+            const [year, month] = monthInput.split('-');
+            const monthStart = new Date(year, month - 1, 1);
+            const monthEnd = new Date(year, month, 0);
+            
+            const monthlyExpenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate >= monthStart && expenseDate <= monthEnd;
+            });
+            
+            const reportContent = document.getElementById('reportContent');
+            if (monthlyExpenses.length === 0) {
+                reportContent.innerHTML = `<div class="text-center py-8 text-gray-500"><i data-feather="frown" class="w-12 h-12 mx-auto mb-2"></i><p>No hay gastos registrados para este mes</p></div>`;
+                feather.replace();
+                return;
+            }
+            
+            const expensesUSD = monthlyExpenses.filter(e => e.currency === 'USD');
+            const expensesVES = monthlyExpenses.filter(e => e.currency === 'VES');
+            const totalUSD = expensesUSD.reduce((sum, e) => sum + e.amount, 0);
+            const totalVES = expensesVES.reduce((sum, e) => sum + e.amount, 0);
+            
+            const formatReportSection = (total, expensesArr, currencySymbol, currencyName) => {
+                if (expensesArr.length === 0) return '';
+                
+                let html = `
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-2">${currencyName} - Total: ${currencySymbol}${total.toFixed(2)}</h4>
+                        <div class="space-y-2">
+                `;
+                
+                const categories = {};
+                expensesArr.forEach(e => {
+                    const category = e.description.split(' ')[0].toLowerCase() || 'varios';
+                    if (!categories[category]) categories[category] = 0;
+                    categories[category] += e.amount;
+                });
+                
+                Object.entries(categories).sort((a, b) => b[1] - a[1]).forEach(([category, amount]) => {
+                    const percentage = (amount / total) * 100;
+                    html += `
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="capitalize">${category}</span>
+                                <span>${currencySymbol}${amount.toFixed(2)} (${percentage.toFixed(1)}%)</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+                return html;
+            };
+            
+            reportContent.innerHTML = formatReportSection(totalUSD, expensesUSD, '$', 'Dólares') + formatReportSection(totalVES, expensesVES, 'Bs', 'Bolívares');
+            feather.replace();
+        }
+
+        // Formatear fecha
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString + 'T00:00:00').toLocaleDateString('es-ES', options);
+        }
+
+        // Mostrar notificación
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-2 rounded-md shadow-lg flex items-center animate-fade-in z-50`;
+            notification.innerHTML = `
+                <i data-feather="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info'}" class="mr-2"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            feather.replace();
+            
+            setTimeout(() => {
+                notification.classList.remove('animate-fade-in');
+                notification.classList.add('animate-fade-out');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        @keyframes animate-fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes animate-fade-out {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        .animate-fade-in {
+            animation: animate-fade-in 0.3s ease-out forwards;
+        }
+        .animate-fade-out {
+            animation: animate-fade-out 0.3s ease-in forwards;
+        }
+    </style>
+</body>
+</html>
