@@ -147,15 +147,22 @@
 
             <div class="md:col-span-2 glass rounded-xl p-6" data-aos="fade-left">
                 <h2 class="text-xl font-semibold mb-4 flex items-center text-white">
-                    <i data-feather="shopping-bag" class="mr-2 text-blue-200"></i> Registrar gasto
+                    <i data-feather="shopping-bag" class="mr-2 text-blue-200"></i> Registrar movimiento
                 </h2>
                 <div class="space-y-4">
                     <div>
+                        <label class="block text-sm font-medium text-white mb-1">Tipo de movimiento</label>
+                        <select id="movementType" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800">
+                            <option value="expense">Gasto</option>
+                            <option value="deposit">Depósito</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-white mb-1">Monto</label>
                         <div class="relative flex">
-                            <input type="number" id="expenseAmount" placeholder="0.00" 
+                            <input type="number" id="movementAmount" placeholder="0.00" 
                                    class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800 placeholder-gray-500">
-                            <select id="expenseCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border bg-white/50 text-gray-800">
+                            <select id="movementCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border bg-white/50 text-gray-800">
                                 <option value="USD">USD ($)</option>
                                 <option value="VES">VES (Bs)</option>
                             </select>
@@ -163,10 +170,10 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-white mb-1">Descripción</label>
-                        <input type="text" id="expenseDescription" placeholder="¿En qué gastaste?" 
+                        <input type="text" id="movementDescription" placeholder="¿En qué gastaste o de dónde vino?" 
                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800 placeholder-gray-500">
                     </div>
-                    <div>
+                    <div id="expenseTypeContainer">
                         <label class="block text-sm font-medium text-white mb-1">Tipo de gasto</label>
                         <select id="expenseType" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800">
                             <option value="Personal">Personal</option>
@@ -175,11 +182,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-white mb-1">Fecha</label>
-                        <input type="text" id="expenseDate" 
+                        <input type="text" id="movementDate" 
                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800">
                     </div>
                     <div class="flex space-x-3">
-                        <button onclick="addExpense()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
+                        <button onclick="addMovement()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
                             <i data-feather="plus" class="mr-2"></i> Agregar
                         </button>
                     </div>
@@ -187,7 +194,7 @@
 
                 <div class="mt-8">
                     <h3 class="text-lg font-semibold mb-4 flex items-center text-white">
-                        <i data-feather="list" class="mr-2 text-white"></i> Historial de gastos
+                        <i data-feather="list" class="mr-2 text-white"></i> Historial de movimientos
                     </h3>
                     <div class="overflow-auto max-h-96 scrollbar-hide">
                         <table class="min-w-full divide-y divide-white/20">
@@ -200,7 +207,7 @@
                                     <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="expensesList" class="divide-y divide-white/20">
+                            <tbody id="movementsList" class="divide-y divide-white/20">
                                 </tbody>
                         </table>
                     </div>
@@ -287,24 +294,37 @@
         
         // Variables globales
         let initialBalance = { USD: 0, VES: 0 };
-        let expenses = [];
+        let movements = [];
         
         // Inicializar componentes
         document.addEventListener('DOMContentLoaded', function() {
             feather.replace();
             AOS.init();
             setupDatepicker();
+            setupMovementTypeListener();
             
             loadInitialBalanceFromDB();
-            listenForExpenses();
+            listenForMovements();
         });
 
         // Configurar Flatpickr
         function setupDatepicker() {
-            flatpickr("#expenseDate", {
+            flatpickr("#movementDate", {
                 dateFormat: "Y-m-d",
                 locale: "es",
                 defaultDate: "today"
+            });
+        }
+        
+        // Listener para mostrar/ocultar "Tipo de gasto"
+        function setupMovementTypeListener() {
+            document.getElementById('movementType').addEventListener('change', (event) => {
+                const expenseTypeContainer = document.getElementById('expenseTypeContainer');
+                if (event.target.value === 'expense') {
+                    expenseTypeContainer.classList.remove('hidden');
+                } else {
+                    expenseTypeContainer.classList.add('hidden');
+                }
             });
         }
 
@@ -347,34 +367,34 @@
             }
         }
 
-        // Listener en tiempo real para gastos
-        function listenForExpenses() {
-            db.collection('expenses').orderBy('date', 'desc').onSnapshot(snapshot => {
-                expenses = snapshot.docs.map(doc => ({
+        // Listener en tiempo real para movimientos
+        function listenForMovements() {
+            db.collection('movements').orderBy('date', 'desc').onSnapshot(snapshot => {
+                movements = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
-                renderExpenses();
+                renderMovements();
                 updateBalanceSummary();
                 renderRegisteredMonths();
             }, error => {
-                console.error("Error en el listener de gastos: ", error);
+                console.error("Error en el listener de movimientos: ", error);
             });
         }
 
-        // Agregar nuevo gasto
-        async function addExpense() {
-            const amountInput = document.getElementById('expenseAmount');
-            const descriptionInput = document.getElementById('expenseDescription');
-            const dateInput = document.getElementById('expenseDate');
-            const currencyInput = document.getElementById('expenseCurrency');
-            const typeInput = document.getElementById('expenseType');
+        // Agregar nuevo movimiento (gasto o depósito)
+        async function addMovement() {
+            const type = document.getElementById('movementType').value;
+            const amountInput = document.getElementById('movementAmount');
+            const descriptionInput = document.getElementById('movementDescription');
+            const dateInput = document.getElementById('movementDate');
+            const currencyInput = document.getElementById('movementCurrency');
+            const expenseType = document.getElementById('expenseType').value;
             
             const amount = parseFloat(amountInput.value) || 0;
             const description = descriptionInput.value.trim();
             const date = dateInput.value;
             const currency = currencyInput.value;
-            const type = typeInput.value;
             
             if (amount <= 0) {
                 showNotification('El monto debe ser mayor a cero', 'error');
@@ -386,12 +406,7 @@
                 return;
             }
 
-            if (initialBalance[currency] <= 0) {
-                 showNotification('Primero debes establecer un saldo inicial para esta moneda', 'error');
-                 return;
-            }
-            
-            const newExpense = {
+            const newMovement = {
                 amount,
                 description,
                 date,
@@ -400,83 +415,94 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             
+            if (type === 'expense') {
+                newMovement.expenseType = expenseType;
+            }
+            
             try {
-                await db.collection('expenses').add(newExpense);
+                await db.collection('movements').add(newMovement);
                 amountInput.value = '';
                 descriptionInput.value = '';
-                showNotification('Gasto agregado correctamente', 'success');
+                showNotification('Movimiento agregado correctamente', 'success');
             }
             catch (error) {
-                console.error("Error al agregar gasto: ", error);
-                showNotification('Error al agregar gasto', 'error');
+                console.error("Error al agregar movimiento: ", error);
+                showNotification('Error al agregar movimiento', 'error');
             }
         }
 
-        // Renderizar lista de gastos
-        function renderExpenses() {
-            const expensesList = document.getElementById('expensesList');
-            expensesList.innerHTML = '';
+        // Renderizar lista de movimientos
+        function renderMovements() {
+            const movementsList = document.getElementById('movementsList');
+            movementsList.innerHTML = '';
             
-            if (expenses.length === 0) {
-                expensesList.innerHTML = `
+            if (movements.length === 0) {
+                movementsList.innerHTML = `
                     <tr>
                         <td colspan="5" class="px-4 py-4 text-center text-white/50">
-                            No hay gastos registrados aún
+                            No hay movimientos registrados aún
                         </td>
                     </tr>
                 `;
                 return;
             }
             
-            expenses.forEach(expense => {
+            movements.forEach(movement => {
                 const row = document.createElement('tr');
-                const formattedAmount = expense.currency === 'USD' 
-                    ? `-$${formatNumber(expense.amount, 'en-US')}`
-                    : `Bs -${formatNumber(expense.amount, 'es-VE')}`;
+                const isExpense = movement.type === 'expense';
+                const colorClass = isExpense ? 'text-red-300' : 'text-green-300';
+                const sign = isExpense ? '-' : '+';
+                
+                const formattedAmount = movement.currency === 'USD' 
+                    ? `${sign}$${formatNumber(movement.amount, 'en-US')}`
+                    : `${sign}Bs ${formatNumber(movement.amount, 'es-VE')}`;
                 
                 row.innerHTML = `
-                    <td class="px-4 py-2 whitespace-nowrap text-white">${formatDate(expense.date)}</td>
-                    <td class="px-4 py-2 text-white">${expense.description}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm text-white">${expense.type}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-red-300">${formattedAmount}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-white">${formatDate(movement.date)}</td>
+                    <td class="px-4 py-2 text-white">${movement.description}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-white capitalize">${movement.type}</td>
+                    <td class="px-4 py-2 whitespace-nowrap ${colorClass}">${formattedAmount}</td>
                     <td class="px-4 py-2 whitespace-nowrap">
-                        <button onclick="deleteExpense('${expense.id}')" class="text-red-300 hover:text-red-500">
+                        <button onclick="deleteMovement('${movement.id}')" class="text-red-300 hover:text-red-500">
                             <i data-feather="trash-2" class="w-4 h-4"></i>
                         </button>
                     </td>
                 `;
-                expensesList.appendChild(row);
+                movementsList.appendChild(row);
             });
             
             feather.replace();
         }
 
-        // Eliminar gasto
-        async function deleteExpense(id) {
-            if (confirm('¿Estás seguro de eliminar este gasto?')) {
+        // Eliminar movimiento
+        async function deleteMovement(id) {
+            if (confirm('¿Estás seguro de eliminar este movimiento?')) {
                 try {
-                    await db.collection('expenses').doc(id).delete();
-                    showNotification('Gasto eliminado correctamente', 'success');
+                    await db.collection('movements').doc(id).delete();
+                    showNotification('Movimiento eliminado correctamente', 'success');
                 } catch (error) {
-                    console.error("Error al eliminar gasto: ", error);
-                    showNotification('Error al eliminar gasto', 'error');
+                    console.error("Error al eliminar movimiento: ", error);
+                    showNotification('Error al eliminar movimiento', 'error');
                 }
             }
         }
 
         // Actualizar resumen de saldo
         function updateBalanceSummary() {
-            const totalExpensesUSD = expenses.filter(e => e.currency === 'USD').reduce((sum, expense) => sum + expense.amount, 0);
-            const totalExpensesVES = expenses.filter(e => e.currency === 'VES').reduce((sum, expense) => sum + expense.amount, 0);
+            const totalExpensesUSD = movements.filter(m => m.currency === 'USD' && m.type === 'expense').reduce((sum, m) => sum + m.amount, 0);
+            const totalDepositsUSD = movements.filter(m => m.currency === 'USD' && m.type === 'deposit').reduce((sum, m) => sum + m.amount, 0);
+
+            const totalExpensesVES = movements.filter(m => m.currency === 'VES' && m.type === 'expense').reduce((sum, m) => sum + m.amount, 0);
+            const totalDepositsVES = movements.filter(m => m.currency === 'VES' && m.type === 'deposit').reduce((sum, m) => sum + m.amount, 0);
             
-            const remainingBalanceUSD = initialBalance.USD - totalExpensesUSD;
-            const remainingBalanceVES = initialBalance.VES - totalExpensesVES;
+            const remainingBalanceUSD = initialBalance.USD + totalDepositsUSD - totalExpensesUSD;
+            const remainingBalanceVES = initialBalance.VES + totalDepositsVES - totalExpensesVES;
 
-            const personalExpensesUSD = expenses.filter(e => e.currency === 'USD' && e.type === 'Personal').reduce((sum, expense) => sum + expense.amount, 0);
-            const businessExpensesUSD = expenses.filter(e => e.currency === 'USD' && e.type === 'Empresarial').reduce((sum, expense) => sum + expense.amount, 0);
+            const personalExpensesUSD = movements.filter(m => m.currency === 'USD' && m.type === 'expense' && m.expenseType === 'Personal').reduce((sum, m) => sum + m.amount, 0);
+            const businessExpensesUSD = movements.filter(m => m.currency === 'USD' && m.type === 'expense' && m.expenseType === 'Empresarial').reduce((sum, m) => sum + m.amount, 0);
 
-            const personalExpensesVES = expenses.filter(e => e.currency === 'VES' && e.type === 'Personal').reduce((sum, expense) => sum + expense.amount, 0);
-            const businessExpensesVES = expenses.filter(e => e.currency === 'VES' && e.type === 'Empresarial').reduce((sum, expense) => sum + expense.amount, 0);
+            const personalExpensesVES = movements.filter(m => m.currency === 'VES' && m.type === 'expense' && m.expenseType === 'Personal').reduce((sum, m) => sum + m.amount, 0);
+            const businessExpensesVES = movements.filter(m => m.currency === 'VES' && m.type === 'expense' && m.expenseType === 'Empresarial').reduce((sum, m) => sum + m.amount, 0);
             
             document.getElementById('displayInitialBalanceUSD').textContent = `$${formatNumber(initialBalance.USD, 'en-US')}`;
             document.getElementById('remainingBalanceUSD').textContent = `$${formatNumber(remainingBalanceUSD, 'en-US')}`;
@@ -509,7 +535,7 @@
             const container = document.getElementById('registeredMonthsContainer');
             container.innerHTML = '';
             
-            const uniqueMonths = [...new Set(expenses.map(e => e.date.substring(0, 7)))].sort().reverse();
+            const uniqueMonths = [...new Set(movements.map(e => e.date.substring(0, 7)))].sort().reverse();
             
             if (uniqueMonths.length === 0) {
                 container.innerHTML = `<p class="text-sm text-white/50 text-center col-span-full">No hay meses registrados aún.</p>`;
@@ -549,20 +575,20 @@
             const monthStart = new Date(year, month - 1, 1);
             const monthEnd = new Date(year, month, 0);
             
-            const monthlyExpenses = expenses.filter(expense => {
-                const expenseDate = new Date(expense.date);
-                return expenseDate >= monthStart && expenseDate <= monthEnd;
+            const monthlyMovements = movements.filter(movement => {
+                const movementDate = new Date(movement.date);
+                return movementDate >= monthStart && movementDate <= monthEnd;
             });
             
             const reportContent = document.getElementById('reportContent');
-            if (monthlyExpenses.length === 0) {
-                reportContent.innerHTML = `<div class="text-center py-8 text-white/50"><i data-feather="frown" class="w-12 h-12 mx-auto mb-2"></i><p>No hay gastos registrados para este mes</p></div>`;
+            if (monthlyMovements.length === 0) {
+                reportContent.innerHTML = `<div class="text-center py-8 text-white/50"><i data-feather="frown" class="w-12 h-12 mx-auto mb-2"></i><p>No hay movimientos registrados para este mes</p></div>`;
                 feather.replace();
                 return;
             }
             
-            const expensesUSD = monthlyExpenses.filter(e => e.currency === 'USD');
-            const expensesVES = monthlyExpenses.filter(e => e.currency === 'VES');
+            const expensesUSD = monthlyMovements.filter(m => m.currency === 'USD' && m.type === 'expense');
+            const expensesVES = monthlyMovements.filter(m => m.currency === 'VES' && m.type === 'expense');
             const totalUSD = expensesUSD.reduce((sum, e) => sum + e.amount, 0);
             const totalVES = expensesVES.reduce((sum, e) => sum + e.amount, 0);
             
