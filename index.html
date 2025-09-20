@@ -13,9 +13,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #bd0000 0%, #1000a2 100%);
+        /* Gradiente para el encabezado con efecto difuminado */
+        .header-gradient-glass {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.4) 0%, rgba(0, 0, 255, 0.4) 100%);
+            -webkit-backdrop-filter: blur(8px); /* Menor blur para un efecto más sutil */
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
+
         .shadow-strong {
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
@@ -29,10 +34,29 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .background-wallpaper {
+            background-image: url('wall.png'); /* Tu imagen de fondo original */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.2);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .glass-inner {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gray-50">
-    <div class="gradient-bg text-white py-6 px-4 shadow-lg">
+<body class="background-wallpaper font-sans text-white">
+    <div class="header-gradient-glass text-white py-6 px-4 shadow-lg">
         <div class="container mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <div class="w-12 h-12 bg-white rounded-full border-2 border-white flex items-center justify-center overflow-hidden">
@@ -50,17 +74,17 @@
 
     <div class="container mx-auto px-4 py-8">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="md:col-span-1 bg-white rounded-xl p-6 shadow-strong" data-aos="fade-right">
-                <h2 class="text-xl font-semibold mb-4 flex items-center">
-                    <i data-feather="home" class="mr-2 text-purple-600"></i> Inicio del día
+            <div class="md:col-span-1 glass rounded-xl p-6" data-aos="fade-right">
+                <h2 class="text-xl font-semibold mb-4 flex items-center text-white">
+                    <i data-feather="home" class="mr-2 text-purple-200"></i> Inicio del día
                 </h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Saldo inicial</label>
+                        <label class="block text-sm font-medium text-white mb-1">Saldo inicial</label>
                         <div class="relative flex">
                             <input type="number" id="initialBalance" placeholder="0.00" 
-                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200 p-2 border">
-                            <select id="initialCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border">
+                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200 p-2 border bg-white/50 text-gray-800 placeholder-gray-500">
+                            <select id="initialCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border bg-white/50 text-gray-800">
                                 <option value="USD">USD ($)</option>
                                 <option value="VES">VES (Bs)</option>
                             </select>
@@ -75,89 +99,89 @@
                 </div>
 
                 <div class="mt-8">
-                    <h3 class="font-medium text-gray-800 mb-2">Resumen</h3>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">Saldo inicial ($):</span>
+                    <h3 class="font-medium text-white mb-2">Resumen</h3>
+                    <div class="glass-inner p-4 rounded-lg">
+                        <div class="flex justify-between mb-2 text-white">
+                            <span class="opacity-80">Saldo inicial ($):</span>
                             <span id="displayInitialBalanceUSD" class="font-medium">$0.00</span>
                         </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">Gastos totales ($):</span>
-                            <span id="totalExpensesUSD" class="font-medium text-red-500">$0.00</span>
+                        <div class="flex justify-between mb-2 text-white">
+                            <span class="opacity-80">Gastos totales ($):</span>
+                            <span id="totalExpensesUSD" class="font-medium text-red-300">$0.00</span>
                         </div>
-                        <div class="flex justify-between pt-2 border-t border-gray-200">
-                            <span class="text-gray-800 font-semibold">Saldo restante ($):</span>
-                            <span id="remainingBalanceUSD" class="font-bold text-green-600">$0.00</span>
+                        <div class="flex justify-between pt-2 border-t border-white/20">
+                            <span class="text-white font-semibold">Saldo restante ($):</span>
+                            <span id="remainingBalanceUSD" class="font-bold text-green-300">$0.00</span>
                         </div>
-                        <hr class="my-4 border-gray-200">
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">Saldo inicial (Bs):</span>
+                        <hr class="my-4 border-white/20">
+                        <div class="flex justify-between mb-2 text-white">
+                            <span class="opacity-80">Saldo inicial (Bs):</span>
                             <span id="displayInitialBalanceVES" class="font-medium">Bs 0.00</span>
                         </div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-gray-600">Gastos totales (Bs):</span>
-                            <span id="totalExpensesVES" class="font-medium text-red-500">Bs 0.00</span>
+                        <div class="flex justify-between mb-2 text-white">
+                            <span class="opacity-80">Gastos totales (Bs):</span>
+                            <span id="totalExpensesVES" class="font-medium text-red-300">Bs 0.00</span>
                         </div>
-                        <div class="flex justify-between pt-2 border-t border-gray-200">
-                            <span class="text-gray-800 font-semibold">Saldo restante (Bs):</span>
-                            <span id="remainingBalanceVES" class="font-bold text-green-600">Bs 0.00</span>
+                        <div class="flex justify-between pt-2 border-t border-white/20">
+                            <span class="text-white font-semibold">Saldo restante (Bs):</span>
+                            <span id="remainingBalanceVES" class="font-bold text-green-300">Bs 0.00</span>
                         </div>
                     </div>
-                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
-                        <h4 class="text-md font-semibold mb-2">Resumen por tipo de gasto</h4>
-                        <div class="flex justify-between mb-1 text-sm">
-                            <span class="text-gray-600">Personal ($):</span>
-                            <span id="personalExpensesUSD" class="font-medium text-red-500">$0.00</span>
+                    <div class="mt-6 glass-inner p-4 rounded-lg">
+                        <h4 class="text-md font-semibold mb-2 text-white">Resumen por tipo de gasto</h4>
+                        <div class="flex justify-between mb-1 text-sm text-white">
+                            <span class="opacity-80">Personal ($):</span>
+                            <span id="personalExpensesUSD" class="font-medium text-red-300">$0.00</span>
                         </div>
-                        <div class="flex justify-between mb-1 text-sm">
-                            <span class="text-gray-600">Empresarial ($):</span>
-                            <span id="businessExpensesUSD" class="font-medium text-red-500">$0.00</span>
+                        <div class="flex justify-between mb-1 text-sm text-white">
+                            <span class="opacity-80">Empresarial ($):</span>
+                            <span id="businessExpensesUSD" class="font-medium text-red-300">$0.00</span>
                         </div>
-                        <hr class="my-2 border-gray-200">
-                        <div class="flex justify-between mb-1 text-sm">
-                            <span class="text-gray-600">Personal (Bs):</span>
-                            <span id="personalExpensesVES" class="font-medium text-red-500">Bs 0.00</span>
+                        <hr class="my-2 border-white/20">
+                        <div class="flex justify-between mb-1 text-sm text-white">
+                            <span class="opacity-80">Personal (Bs):</span>
+                            <span id="personalExpensesVES" class="font-medium text-red-300">Bs 0.00</span>
                         </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Empresarial (Bs):</span>
-                            <span id="businessExpensesVES" class="font-medium text-red-500">Bs 0.00</span>
+                        <div class="flex justify-between text-sm text-white">
+                            <span class="opacity-80">Empresarial (Bs):</span>
+                            <span id="businessExpensesVES" class="font-medium text-red-300">Bs 0.00</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="md:col-span-2 bg-white rounded-xl p-6 shadow-strong" data-aos="fade-left">
-                <h2 class="text-xl font-semibold mb-4 flex items-center">
-                    <i data-feather="shopping-bag" class="mr-2 text-blue-600"></i> Registrar gasto
+            <div class="md:col-span-2 glass rounded-xl p-6" data-aos="fade-left">
+                <h2 class="text-xl font-semibold mb-4 flex items-center text-white">
+                    <i data-feather="shopping-bag" class="mr-2 text-blue-200"></i> Registrar gasto
                 </h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Monto</label>
+                        <label class="block text-sm font-medium text-white mb-1">Monto</label>
                         <div class="relative flex">
                             <input type="number" id="expenseAmount" placeholder="0.00" 
-                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
-                            <select id="expenseCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border">
+                                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800 placeholder-gray-500">
+                            <select id="expenseCurrency" class="ml-2 rounded-md border-gray-300 shadow-sm p-2 border bg-white/50 text-gray-800">
                                 <option value="USD">USD ($)</option>
                                 <option value="VES">VES (Bs)</option>
                             </select>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                        <label class="block text-sm font-medium text-white mb-1">Descripción</label>
                         <input type="text" id="expenseDescription" placeholder="¿En qué gastaste?" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800 placeholder-gray-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de gasto</label>
-                        <select id="expenseType" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
+                        <label class="block text-sm font-medium text-white mb-1">Tipo de gasto</label>
+                        <select id="expenseType" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800">
                             <option value="Personal">Personal</option>
                             <option value="Empresarial">Empresarial</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                        <label class="block text-sm font-medium text-white mb-1">Fecha</label>
                         <input type="date" id="expenseDate" 
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
+                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800">
                     </div>
                     <div class="flex space-x-3">
                         <button onclick="addExpense()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
@@ -167,29 +191,29 @@
                 </div>
 
                 <div class="mt-8">
-                    <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        <i data-feather="list" class="mr-2 text-gray-600"></i> Historial de gastos
+                    <h3 class="text-lg font-semibold mb-4 flex items-center text-white">
+                        <i data-feather="list" class="mr-2 text-white"></i> Historial de gastos
                     </h3>
                     <div class="overflow-auto max-h-96 scrollbar-hide">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-white/20">
+                            <thead class="bg-white/10">
                                 <tr>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
-                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acción</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Fecha</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Descripción</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Tipo</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Monto</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="expensesList" class="bg-white divide-y divide-gray-200">
+                            <tbody id="expensesList" class="divide-y divide-white/20">
                                 </tbody>
                         </table>
                     </div>
                 </div>
                 
                 <div class="mt-8">
-                    <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        <i data-feather="calendar" class="mr-2 text-gray-600"></i> Meses registrados
+                    <h3 class="text-lg font-semibold mb-4 flex items-center text-white">
+                        <i data-feather="calendar" class="mr-2 text-white"></i> Meses registrados
                     </h3>
                     <div id="registeredMonthsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                         </div>
@@ -199,25 +223,25 @@
     </div>
 
     <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
+        <div class="glass rounded-xl p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold flex items-center">
-                    <i data-feather="pie-chart" class="mr-2 text-green-600"></i> Informe mensual
+                <h3 class="text-xl font-semibold flex items-center text-white">
+                    <i data-feather="pie-chart" class="mr-2 text-green-200"></i> Informe mensual
                 </h3>
-                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <button onclick="closeModal()" class="text-white/70 hover:text-white">
                     <i data-feather="x"></i>
                 </button>
             </div>
             
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Seleccionar mes</label>
-                <input type="month" id="reportMonth" class="w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                <label class="block text-sm font-medium text-white mb-1">Seleccionar mes</label>
+                <input type="month" id="reportMonth" class="w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white/50 text-gray-800">
             </div>
             
             <div id="reportContent" class="space-y-4">
                 </div>
             
-            <div class="mt-6 pt-4 border-t border-gray-200">
+            <div class="mt-6 pt-4 border-t border-white/20">
                 <button onclick="generateReport()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
                     <i data-feather="refresh-cw" class="mr-2"></i> Generar informe
                 </button>
@@ -226,21 +250,21 @@
     </div>
 
     <div id="editBalanceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
+        <div class="glass rounded-xl p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold">Editar Saldo Inicial</h3>
-                <button onclick="closeEditBalanceModal()" class="text-gray-500 hover:text-gray-700">
+                <h3 class="text-xl font-semibold text-white">Editar Saldo Inicial</h3>
+                <button onclick="closeEditBalanceModal()" class="text-white/70 hover:text-white">
                     <i data-feather="x"></i>
                 </button>
             </div>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Saldo USD ($)</label>
-                    <input type="number" id="editBalanceUSD" placeholder="0.00" class="w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    <label class="block text-sm font-medium text-white mb-1">Saldo USD ($)</label>
+                    <input type="number" id="editBalanceUSD" placeholder="0.00" class="w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white/50 text-gray-800">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Saldo VES (Bs)</label>
-                    <input type="number" id="editBalanceVES" placeholder="0.00" class="w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    <label class="block text-sm font-medium text-white mb-1">Saldo VES (Bs)</label>
+                    <input type="number" id="editBalanceVES" placeholder="0.00" class="w-full rounded-md border-gray-300 shadow-sm p-2 border bg-white/50 text-gray-800">
                 </div>
                 <button onclick="saveEditedBalance()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition flex items-center justify-center">
                     <i data-feather="save" class="mr-2"></i> Guardar Cambios
@@ -377,7 +401,8 @@
                 amountInput.value = '';
                 descriptionInput.value = '';
                 showNotification('Gasto agregado correctamente', 'success');
-            } catch (error) {
+            }
+            catch (error) {
                 console.error("Error al agregar gasto: ", error);
                 showNotification('Error al agregar gasto', 'error');
             }
@@ -391,7 +416,7 @@
             if (expenses.length === 0) {
                 expensesList.innerHTML = `
                     <tr>
-                        <td colspan="5" class="px-4 py-4 text-center text-gray-500">
+                        <td colspan="5" class="px-4 py-4 text-center text-white/50">
                             No hay gastos registrados aún
                         </td>
                     </tr>
@@ -406,12 +431,12 @@
                     : `Bs -${formatNumber(expense.amount, 'es-VE')}`;
                 
                 row.innerHTML = `
-                    <td class="px-4 py-2 whitespace-nowrap">${formatDate(expense.date)}</td>
-                    <td class="px-4 py-2">${expense.description}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-sm">${expense.type}</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-red-500">${formattedAmount}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-white">${formatDate(expense.date)}</td>
+                    <td class="px-4 py-2 text-white">${expense.description}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-white">${expense.type}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-red-300">${formattedAmount}</td>
                     <td class="px-4 py-2 whitespace-nowrap">
-                        <button onclick="deleteExpense('${expense.id}')" class="text-red-500 hover:text-red-700">
+                        <button onclick="deleteExpense('${expense.id}')" class="text-red-300 hover:text-red-500">
                             <i data-feather="trash-2" class="w-4 h-4"></i>
                         </button>
                     </td>
@@ -465,11 +490,11 @@
 
             const updateBalanceColor = (balanceId, remainingBalance, initial) => {
                 const element = document.getElementById(balanceId);
-                element.classList.remove('text-green-600', 'text-yellow-600');
+                element.classList.remove('text-green-300', 'text-yellow-300');
                 if (remainingBalance < (initial * 0.2)) {
-                    element.classList.add('text-yellow-600');
+                    element.classList.add('text-yellow-300');
                 } else {
-                    element.classList.add('text-green-600');
+                    element.classList.add('text-green-300');
                 }
             };
             
@@ -485,7 +510,7 @@
             const uniqueMonths = [...new Set(expenses.map(e => e.date.substring(0, 7)))].sort().reverse();
             
             if (uniqueMonths.length === 0) {
-                container.innerHTML = `<p class="text-sm text-gray-500 text-center col-span-full">No hay meses registrados aún.</p>`;
+                container.innerHTML = `<p class="text-sm text-white/50 text-center col-span-full">No hay meses registrados aún.</p>`;
                 return;
             }
             
@@ -494,7 +519,7 @@
                 const monthName = new Date(year, monthNum - 1).toLocaleString('es-ES', { month: 'long', year: 'numeric' });
                 
                 const button = document.createElement('button');
-                button.className = 'bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-sm transition fade-in text-center text-sm';
+                button.className = 'glass-inner hover:bg-white/20 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition fade-in text-center text-sm';
                 button.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
                 button.onclick = () => showMonthlyReportFor(month);
                 container.appendChild(button);
@@ -529,7 +554,7 @@
             
             const reportContent = document.getElementById('reportContent');
             if (monthlyExpenses.length === 0) {
-                reportContent.innerHTML = `<div class="text-center py-8 text-gray-500"><i data-feather="frown" class="w-12 h-12 mx-auto mb-2"></i><p>No hay gastos registrados para este mes</p></div>`;
+                reportContent.innerHTML = `<div class="text-center py-8 text-white/50"><i data-feather="frown" class="w-12 h-12 mx-auto mb-2"></i><p>No hay gastos registrados para este mes</p></div>`;
                 feather.replace();
                 return;
             }
@@ -544,7 +569,7 @@
                 
                 let html = `
                     <div class="mb-6">
-                        <h4 class="font-medium mb-2">${locale === 'en-US' ? 'Dólares' : 'Bolívares'} - Total: ${currencySymbol}${formatNumber(total, locale)}</h4>
+                        <h4 class="font-medium mb-2 text-white">${locale === 'en-US' ? 'Dólares' : 'Bolívares'} - Total: ${currencySymbol}${formatNumber(total, locale)}</h4>
                         <div class="space-y-2">
                 `;
                 
@@ -559,12 +584,12 @@
                     const percentage = (amount / total) * 100;
                     html += `
                         <div>
-                            <div class="flex justify-between text-sm mb-1">
+                            <div class="flex justify-between text-sm mb-1 text-white">
                                 <span class="capitalize">${category}</span>
                                 <span>${currencySymbol}${formatNumber(amount, locale)} (${percentage.toFixed(1)}%)</span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-blue-500 h-2 rounded-full" style="width: ${percentage}%"></div>
+                            <div class="w-full bg-white/20 rounded-full h-2">
+                                <div class="bg-blue-300 h-2 rounded-full" style="width: ${percentage}%"></div>
                             </div>
                         </div>
                     `;
@@ -642,9 +667,8 @@
             };
             
             try {
-                // Actualizar el documento en Firestore
                 await db.collection('summary').doc('initialBalances').set(updatedBalances);
-                initialBalance = updatedBalances; // Actualizar la variable local
+                initialBalance = updatedBalances; 
                 updateBalanceSummary();
                 closeEditBalanceModal();
                 showNotification('Saldo inicial actualizado correctamente', 'success');
