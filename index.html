@@ -12,6 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
     <style>
         /* Gradiente para el encabezado con efecto difuminado */
         .header-gradient-glass {
@@ -56,6 +58,7 @@
     </style>
 </head>
 <body class="background-wallpaper font-sans text-white">
+    
     <div class="header-gradient-glass text-white py-6 px-4 shadow-lg">
         <div class="container mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-4">
@@ -105,10 +108,6 @@
                             <span class="opacity-80">Saldo inicial ($):</span>
                             <span id="displayInitialBalanceUSD" class="font-medium">$0.00</span>
                         </div>
-                        <div class="flex justify-between mb-2 text-white">
-                            <span class="opacity-80">Gastos totales ($):</span>
-                            <span id="totalExpensesUSD" class="font-medium text-red-300">$0.00</span>
-                        </div>
                         <div class="flex justify-between pt-2 border-t border-white/20">
                             <span class="text-white font-semibold">Saldo restante ($):</span>
                             <span id="remainingBalanceUSD" class="font-bold text-green-300">$0.00</span>
@@ -117,10 +116,6 @@
                         <div class="flex justify-between mb-2 text-white">
                             <span class="opacity-80">Saldo inicial (Bs):</span>
                             <span id="displayInitialBalanceVES" class="font-medium">Bs 0.00</span>
-                        </div>
-                        <div class="flex justify-between mb-2 text-white">
-                            <span class="opacity-80">Gastos totales (Bs):</span>
-                            <span id="totalExpensesVES" class="font-medium text-red-300">Bs 0.00</span>
                         </div>
                         <div class="flex justify-between pt-2 border-t border-white/20">
                             <span class="text-white font-semibold">Saldo restante (Bs):</span>
@@ -180,7 +175,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-white mb-1">Fecha</label>
-                        <input type="date" id="expenseDate" 
+                        <input type="text" id="expenseDate" 
                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border bg-white/50 text-gray-800">
                     </div>
                     <div class="flex space-x-3">
@@ -273,8 +268,10 @@
         </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
-        // Configuración de Firebase - ¡AQUÍ ESTÁ TU API!
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCcpgJ3zCDKZU3gcoidiJNjgmFuX8XLyzI",
             authDomain: "ld-no-te-pases.firebaseapp.com",
@@ -296,13 +293,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             feather.replace();
             AOS.init();
-            
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('expenseDate').value = today;
+            setupDatepicker();
             
             loadInitialBalanceFromDB();
             listenForExpenses();
         });
+
+        // Configurar Flatpickr
+        function setupDatepicker() {
+            flatpickr("#expenseDate", {
+                dateFormat: "Y-m-d",
+                locale: "es",
+                defaultDate: "today"
+            });
+        }
 
         // Cargar saldo inicial desde Firestore
         async function loadInitialBalanceFromDB() {
@@ -475,11 +479,9 @@
             const businessExpensesVES = expenses.filter(e => e.currency === 'VES' && e.type === 'Empresarial').reduce((sum, expense) => sum + expense.amount, 0);
             
             document.getElementById('displayInitialBalanceUSD').textContent = `$${formatNumber(initialBalance.USD, 'en-US')}`;
-            document.getElementById('totalExpensesUSD').textContent = `-$${formatNumber(totalExpensesUSD, 'en-US')}`;
             document.getElementById('remainingBalanceUSD').textContent = `$${formatNumber(remainingBalanceUSD, 'en-US')}`;
             
             document.getElementById('displayInitialBalanceVES').textContent = `Bs ${formatNumber(initialBalance.VES, 'es-VE')}`;
-            document.getElementById('totalExpensesVES').textContent = `Bs -${formatNumber(totalExpensesVES, 'es-VE')}`;
             document.getElementById('remainingBalanceVES').textContent = `Bs ${formatNumber(remainingBalanceVES, 'es-VE')}`;
 
             document.getElementById('personalExpensesUSD').textContent = `-$${formatNumber(personalExpensesUSD, 'en-US')}`;
@@ -569,7 +571,7 @@
                 
                 let html = `
                     <div class="mb-6">
-                        <h4 class="font-medium mb-2 text-white">${locale === 'en-US' ? 'Dólares' : 'Bolívares'} - Total: ${currencySymbol}${formatNumber(total, locale)}</h4>
+                        <h4 class="font-medium mb-2 text-white">${locale === 'en-US' ? 'Dólares' : 'Bolívares'}</h4>
                         <div class="space-y-2">
                 `;
                 
